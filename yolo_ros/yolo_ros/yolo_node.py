@@ -14,7 +14,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import cv2
 from typing import List, Dict
 from cv_bridge import CvBridge
 
@@ -28,7 +27,7 @@ from rclpy.lifecycle import TransitionCallbackReturn
 from rclpy.lifecycle import LifecycleState
 
 import torch
-from ultralytics import YOLO, YOLOWorld
+from ultralytics import YOLO, YOLOWorld, YOLOE
 from ultralytics.engine.results import Results
 from ultralytics.engine.results import Boxes
 from ultralytics.engine.results import Masks
@@ -69,7 +68,7 @@ class YoloNode(LifecycleNode):
         self.declare_parameter("agnostic_nms", False)
         self.declare_parameter("retina_masks", False)
 
-        self.type_to_model = {"YOLO": YOLO, "World": YOLOWorld}
+        self.type_to_model = {"YOLO": YOLO, "World": YOLOWorld, "YOLOE": YOLOE}
 
     def on_configure(self, state: LifecycleState) -> TransitionCallbackReturn:
         self.get_logger().info(f"[{self.get_name()}] Configuring...")
@@ -136,11 +135,13 @@ class YoloNode(LifecycleNode):
             self.get_logger().error(f"Model file '{self.model}' does not exists")
             return TransitionCallbackReturn.ERROR
 
-        try:
-            self.get_logger().info("Trying to fuse model...")
-            self.yolo.fuse()
-        except TypeError as e:
-            self.get_logger().warn(f"Error while fuse: {e}")
+        # YOLOE does not support fusing
+        if isinstance(self.yolo, YOLO) or isinstance(self.yolo, YOLOWorld):
+            try:
+                self.get_logger().info("Trying to fuse model...")
+                self.yolo.fuse()
+            except TypeError as e:
+                self.get_logger().warn(f"Error while fuse: {e}")
 
         self._enable_srv = self.create_service(SetBool, "enable", self.enable_cb)
 
@@ -403,6 +404,8 @@ def main():
     node = YoloNode()
     node.trigger_configure()
     node.trigger_activate()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass

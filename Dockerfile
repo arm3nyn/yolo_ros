@@ -8,10 +8,10 @@ COPY . /root/ros2_ws/src
 
 # Install dependencies
 RUN apt-get update
-RUN apt-get -y --quiet --no-install-recommends install python3-pip
+RUN apt-get -y --quiet --no-install-recommends install python3 python3-pip
 RUN rosdep install --from-paths src --ignore-src -r -y
 
-RUN if [ "$ROS_DISTRO" = "jazzy" ] || [ "$ROS_DISTRO" = "rolling" ]; then \
+RUN if [ "$(lsb_release -rs)" = "24.04" ] || [ "$(lsb_release -rs)" = "24.10" ]; then \
     pip3 install -r src/requirements.txt --break-system-packages --ignore-installed; \
     else \
     pip3 install -r src/requirements.txt; \
