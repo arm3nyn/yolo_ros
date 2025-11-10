@@ -24,6 +24,8 @@ def generate_launch_description():
             "enable_rgbg": True,
             "enable_gyro": False,
             "enable_accel": False,
+            "depth_module.depth_profile": "640x480x30",
+            "rgb_camera.color_profile": "640x480x30",
         }]
     )
 
@@ -37,7 +39,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            "model": LaunchConfiguration("model", default="yolov8m.pt"),
+            "model": LaunchConfiguration("model", default="yolo8m-seg.pt"),
             "tracker": LaunchConfiguration("tracker", default="bytetrack.yaml"),
             "device": LaunchConfiguration("device", default="cuda:0"),
             "enable": LaunchConfiguration("enable", default="True"),
